@@ -105,6 +105,25 @@ request_rec *sv2request_rec(SV *in, char *pclass)
     return r;
 }
 
+char * construct_redirect(request_rec *r, char * szURL, HV *hvhash)
+{
+	HE *he;
+	STRLEN keylen;
+
+	if (hvhash == NULL || !hv_iterinit(hvhash)) { return szURL; }
+
+	if (*szURL && strstr("?", szURL) == NULL) { szURL = ap_pstrcat(r -> pool, szURL, "?", NULL); }
+
+	while (he = hv_iternext(hvhash))
+	{
+		const char *key = HePV(he,keylen);
+		const char *value = SvPV_nolen(HeVAL(he));
+
+		szURL = ap_pstrcat(r -> pool, szURL, escape(r -> pool, key), "=", escape(r -> pool, value), "&amp;", NULL);
+	}
+return szURL;
+}
+
 char* avcookie2char(request_rec *r, AV *avarr)
 {
 	int i;
@@ -247,9 +266,6 @@ void store_pair(HV * pData, const char * sKey, SV * pVal)
 		SvREFCNT_dec(*pTMP);
 		*pTMP = pVal;
 	}
-
-	
-	
 }
 
 int iterator(void        * req,
@@ -404,32 +420,46 @@ IV send_http_header(self)
 	OUTPUT:
 		RETVAL
 
-IV redirect(self, uri)
+IV redirect(self, uri, ...)
 	SV *self;
 	SV *uri;
 	PREINIT:
 		request_rec *r;
+		HV * params;
 	CODE:
 		if (!SvROK(self)) {XSRETURN_UNDEF;}
 		r = sv2request_rec(self, RCLASS);
-		
-		ap_table_set(r -> headers_out, "Location", SvPV_nolen(uri));
+
+		params = NULL;
+		if (items == 3 && SvTYPE(SvRV(ST(2))) == SVt_PVHV)
+		{
+			params = (HV*) SvRV(ST(2));
+		}
+
+		ap_table_set(r -> headers_out, "Location", construct_redirect(r, SvPV_nolen(uri), params));
 		r -> status = HTTP_MOVED_TEMPORARILY;
-		
+
 		RETVAL = 1;
 	OUTPUT:
 		RETVAL
 
-IV redirect_permanent(self, uri)
+IV redirect_permanent(self, uri, ...)
 	SV *self;
 	SV *uri;
 	PREINIT:
 		request_rec *r;
+		HV * params;
 	CODE:
 		if (!SvROK(self)) {XSRETURN_UNDEF;}
 		r = sv2request_rec(self, RCLASS);
-		
-		ap_table_set(r -> headers_out, "Location", SvPV_nolen(uri));
+
+		params = NULL;
+		if (items == 3 && SvTYPE(SvRV(ST(2))) == SVt_PVHV)
+		{
+			params = (HV*) SvRV(ST(2));
+		}
+
+		ap_table_set(r -> headers_out, "Location", construct_redirect(r, SvPV_nolen(uri), params));
 		r -> status = HTTP_MOVED_PERMANENTLY;
 		
 		RETVAL = 1;

@@ -120,13 +120,15 @@ Dendral::HTTP::Response is a part of Dendral - fast, reliable and lightweight MV
 
   $res -> send_http_header();
 
-=head2 redirect - Redirect to uri (Set 
+=head2 redirect - Redirect to uri  
 
   $res -> redirect('/index.html');
+  $res -> redirect('/index.html', { 'back' => 'http://mail.rambler.ru' });
 
 =head2 redirect_permanent - Permanent redirect to uri.
 
   $res -> redirect_permanent('/index.html');
+  $res -> redirect_permanent('/index.html', { 'back' => 'http://mail.rambler.ru' });
 
 =head2 set_header - Set Response header 
 
@@ -162,6 +164,9 @@ Dendral::HTTP::Response is a part of Dendral - fast, reliable and lightweight MV
 
   $res -> send_file('/etc/passwd');
 
+=head1 AUTHOR
+
+Dmitry Kosenkov (d.kosenkov@rambler-co.ru)
 
 =head1 SEE ALSO
 

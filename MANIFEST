@@ -6,3 +6,5 @@ README
 Response.xs
 t/Dendral-HTTP-Response.t
 lib/Dendral/HTTP/Response.pm
+META.yml                                 Module YAML meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)
